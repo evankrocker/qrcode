@@ -47,6 +47,8 @@
     #qr { display: flex; justify-content: center; margin-top: 18px; }
     .download-btn { background: #059669; margin-top: 8px; }
     .small { font-size: 0.82rem; color: #6b7280; text-align: center; margin-top: 9px;}
+    .flex-row { display: flex; gap: 10px; }
+    .flex-row input { flex: 1; margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -68,8 +70,13 @@
       <label for="title">Job Title</label>
       <input type="text" id="title" required placeholder="e.g. Manager">
 
-      <label for="address">Address</label>
-      <textarea id="address" rows="2" required placeholder="e.g. 123 Main St, City, State, Zip, Country"></textarea>
+      <label>Address</label>
+      <input type="text" id="street" required placeholder="Street (e.g. 123 Main St)">
+      <div class="flex-row">
+        <input type="text" id="city" required placeholder="City">
+        <input type="text" id="state" required placeholder="State">
+        <input type="text" id="zip" required placeholder="Zip Code">
+      </div>
 
       <label for="logo">Company Logo (optional)</label>
       <input type="file" id="logo" accept="image/*">
@@ -90,12 +97,10 @@
     const downloadBtn = document.getElementById('download-btn');
     let qrCode;
 
-    // Helper: Build VCARD string in v3.0 format (with EMAIL)
-    function buildVCard(name, email, phone, company, title, address) {
+    // Helper: Build VCARD string in v3.0 format (with address fields)
+    function buildVCard(name, email, phone, company, title, street, city, state, zip) {
       // VCARD ADR fields: PO Box;Extended;Street;City;State;Zip;Country
-      // We'll split address into parts by comma for best compatibility
-      const adrParts = address.split(',').map(part => part.trim());
-      while (adrParts.length < 7) adrParts.push('');
+      // We'll use empty PO Box, Extended, and Country fields
       return [
         'BEGIN:VCARD',
         'VERSION:3.0',
@@ -105,7 +110,7 @@
         `TITLE:${title}`,
         `TEL;TYPE=CELL:${phone}`,
         `EMAIL;TYPE=INTERNET:${email}`,
-        `ADR;TYPE=WORK:;${adrParts[0]};${adrParts[1]};${adrParts[2]};${adrParts[3]};${adrParts[4]};${adrParts[5]}`,
+        `ADR;TYPE=WORK:;;${street};${city};${state};${zip};`,
         'END:VCARD'
       ].join('\n');
     }
@@ -118,11 +123,14 @@
       const phone = form.phone.value.trim();
       const company = form.company.value.trim();
       const title = form.title.value.trim();
-      const address = form.address.value.trim();
+      const street = form.street.value.trim();
+      const city = form.city.value.trim();
+      const state = form.state.value.trim();
+      const zip = form.zip.value.trim();
       const logoFile = form.logo.files[0];
 
       // Prepare VCARD data
-      const vcard = buildVCard(name, email, phone, company, title, address);
+      const vcard = buildVCard(name, email, phone, company, title, street, city, state, zip);
 
       // Remove previous QR code
       qrContainer.innerHTML = '';
