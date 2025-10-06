@@ -54,7 +54,7 @@
 
 
     
-    body {
+     body {
       font-family: 'Inter', Arial, sans-serif;
       background: #f6f7fb;
       margin: 0;
@@ -106,7 +106,7 @@
     <center><img src="https://evankrocker.github.io/qrcode/evan.jpg" class="spin"  style="length: 275px; height: 275px;"></center>
     <HR>
     <BR><BR>
-    <form id="vcard-form" autocomplete="off">
+     <form id="vcard-form" autocomplete="off">
       <label for="name">Full Name</label>
       <input type="text" id="name" required placeholder="e.g. John Doe">
 
@@ -129,7 +129,7 @@
         <input type="text" id="state" required placeholder="State">
         <input type="text" id="zip" required placeholder="Zip Code">
       </div>
-    <br>
+
       <label for="logo">Company Logo (optional)</label>
       <input type="file" id="logo" accept="image/*">
 
@@ -214,22 +214,62 @@
         const reader = new FileReader();
         reader.onload = function(ev) {
           qrCode.update({ image: ev.target.result });
-          renderQR();
+          renderQR(name);
         };
         reader.readAsDataURL(logoFile);
       } else {
-        renderQR();
+        renderQR(name);
       }
     });
 
-    function renderQR() {
-      qrCode.append(qrContainer);
-      downloadBtn.style.display = 'block';
-    }
+    function renderQR(name) {
+      // Clear container
+      qrContainer.innerHTML = '';
 
-    downloadBtn.addEventListener('click', function() {
-      qrCode.download({ name: "vcard-qr", extension: "png" });
-    });
+      // Create temp container for QRCodeStyling output
+      const tempDiv = document.createElement('div');
+      qrCode.append(tempDiv);
+
+      // Wait for QR code canvas to be available
+      setTimeout(() => {
+        // Find the canvas inside qrCode
+        const qrCanvas = tempDiv.querySelector('canvas');
+        if (!qrCanvas) return;
+
+        // Create a new canvas with extra height for the name
+        const width = qrCanvas.width;
+        const qrHeight = qrCanvas.height;
+        const extraHeight = 40;
+        const finalHeight = qrHeight + extraHeight;
+
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = width;
+        finalCanvas.height = finalHeight;
+        const ctx = finalCanvas.getContext('2d');
+
+        // Draw QR code image
+        ctx.drawImage(qrCanvas, 0, 0);
+
+        // Draw the name below QR code
+        ctx.font = "bold 20px Inter, Arial";
+        ctx.fillStyle = "#111";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(name, width / 2, qrHeight + 10);
+
+        // Display final canvas
+        qrContainer.appendChild(finalCanvas);
+
+        // Prepare download
+        downloadBtn.onclick = function() {
+          const link = document.createElement('a');
+          link.download = "vcard-qr.png";
+          link.href = finalCanvas.toDataURL("image/png");
+          link.click();
+        };
+        downloadBtn.style.display = 'block';
+      }, 300); // Wait for QR code rendering
+    }
   </script>
 </body>
 </html>
