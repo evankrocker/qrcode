@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VCARD QR Code Generator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f6f7fb;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 430px;
+      margin: 36px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      padding: 28px 24px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    label { display: block; font-weight: 500; margin-bottom: 6px; }
+    input, textarea {
+      width: 100%; margin-bottom: 16px; padding: 9px 10px;
+      border: 1px solid #d6dade; border-radius: 5px;
+      font-size: 1rem; background: #f9fafb;
+      box-sizing: border-box;
+    }
+    input[type="file"] { padding: 3px 0; background: none; }
+    button {
+      background: #2563eb; color: #fff;
+      border: none; border-radius: 5px;
+      padding: 10px 0; font-size: 1.05rem; width: 100%;
+      font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 12px;
+    }
+    button:active { background: #1e40af; }
+    #qr { display: flex; justify-content: center; margin-top: 18px; }
+    .download-btn { background: #059669; margin-top: 8px; }
+    .small { font-size: 0.82rem; color: #6b7280; text-align: center; margin-top: 9px;}
+    .flex-row { display: flex; gap: 10px; }
+    .flex-row input { flex: 1; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>VCARD QR Code Generator</h1>
+    <form id="vcard-form" autocomplete="off">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" required placeholder="e.g. John Doe">
+
+      <label for="email">Email</label>
+      <input type="email" id="email" required placeholder="e.g. john@company.com">
+
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" required placeholder="e.g. +1234567890">
+
+      <label for="company">Company</label>
+      <input type="text" id="company" required placeholder="e.g. Acme Corporation">
+
+      <label for="title">Job Title</label>
+      <input type="text" id="title" required placeholder="e.g. Manager">
+
+      <label>Address</label>
+      <input type="text" id="street" required placeholder="Street (e.g. 123 Main St)">
+      <div class="flex-row">
+        <input type="text" id="city" required placeholder="City">
+        <input type="text" id="state" required placeholder="State">
+        <input type="text" id="zip" required placeholder="Zip Code">
+      </div>
+
+      <label for="logo">Company Logo (optional)</label>
+      <input type="file" id="logo" accept="image/*">
+
+      <button type="submit">Generate QR Code</button>
+    </form>
+    <div id="qr"></div>
+    <button id="download-btn" class="download-btn" style="display:none;">Download QR Code</button>
+    <div class="small">Scan QR code with your phone to add contact.<br>
+      Compatible with iPhone & Android.</div>
+  </div>
+
+  <!-- qr-code-styling library via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+  <script>
+    const form = document.getElementById('vcard-form');
+    const qrContainer = document.getElementById('qr');
+    const downloadBtn = document.getElementById('download-btn');
+    let qrCode;
+
+    // Helper: Build VCARD string in v3.0 format (with address fields)
+    function buildVCard(name, email, phone, company, title, street, city, state, zip) {
+      // VCARD ADR fields: PO Box;Extended;Street;City;State;Zip;Country
+      // We'll use empty PO Box, Extended, and Country fields
+      return [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        `FN:${name}`,
+        `N:${name};;;;`,
+        `ORG:${company}`,
+        `TITLE:${title}`,
+        `TEL;TYPE=CELL:${phone}`,
+        `EMAIL;TYPE=INTERNET:${email}`,
+        `ADR;TYPE=WORK:;;${street};${city};${state};${zip};`,
+        'END:VCARD'
+      ].join('\n');
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Gather form data
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const phone = form.phone.value.trim();
+      const company = form.company.value.trim();
+      const title = form.title.value.trim();
+      const street = form.street.value.trim();
+      const city = form.city.value.trim();
+      const state = form.state.value.trim();
+      const zip = form.zip.value.trim();
+      const logoFile = form.logo.files[0];
+
+      // Prepare VCARD data
+      const vcard = buildVCard(name, email, phone, company, title, street, city, state, zip);
+
+      // Remove previous QR code
+      qrContainer.innerHTML = '';
+      downloadBtn.style.display = 'none';
+
+      // Setup QR code generator
+      qrCode = new QRCodeStyling({
+        width: 300,
+        height: 300,
+        type: "canvas",
+        data: vcard,
+        image: undefined,
+        dotsOptions: {
+          color: "#000", // black
+          type: "rounded"
+        },
+        backgroundOptions: {
+          color: "#fff",
+        },
+        imageOptions: {
+          crossOrigin: "anonymous",
+          margin: 4,
+          imageSize: 0.37 // 37% of QR size (larger logo)
+        }
+      });
+
+      // If logo selected, read as DataURL
+      if (logoFile) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          qrCode.update({ image: ev.target.result });
+          renderQR(name);
+        };
+        reader.readAsDataURL(logoFile);
+      } else {
+        renderQR(name);
+      }
+    });
+
+    function renderQR(name) {
+      // Clear container
+      qrContainer.innerHTML = '';
+
+      // Create temp container for QRCodeStyling output
+      const tempDiv = document.createElement('div');
+      qrCode.append(tempDiv);
+
+      // Wait for QR code canvas to be available
+      setTimeout(() => {
+        // Find the canvas inside qrCode
+        const qrCanvas = tempDiv.querySelector('canvas');
+        if (!qrCanvas) return;
+
+        // Create a new canvas with extra height for the name
+        const width = qrCanvas.width;
+        const qrHeight = qrCanvas.height;
+        const extraHeight = 40;
+        const finalHeight = qrHeight + extraHeight;
+
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = width;
+        finalCanvas.height = finalHeight;
+        const ctx = finalCanvas.getContext('2d');
+
+        // Draw QR code image
+        ctx.drawImage(qrCanvas, 0, 0);
+
+        // Draw the name below QR code
+        ctx.font = "bold 20px Inter, Arial";
+        ctx.fillStyle = "#111";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(name, width / 2, qrHeight + 10);
+
+        // Display final canvas
+        qrContainer.appendChild(finalCanvas);
+
+        // Prepare download
+        downloadBtn.onclick = function() {
+          const link = document.createElement('a');
+          link.download = "vcard-qr.png";
+          link.href = finalCanvas.toDataURL("image/png");
+          link.click();
+        };
+        downloadBtn.style.display = 'block';
+      }, 300); // Wait for QR code rendering
+    }
+  </script>
+</body>
+</html>
