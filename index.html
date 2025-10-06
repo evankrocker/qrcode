@@ -87,17 +87,23 @@
     const downloadBtn = document.getElementById('download-btn');
     let qrCode;
 
-    // Helper: Build VCARD string in v3.0 format
+    // Helper: Build VCARD string in v3.0 format (corrected)
     function buildVCard(name, phone, company, title, address) {
-      const adr = address.replace(/\n/g, ' ').replace(/,/g, ';');
+      // VCARD ADR fields: PO Box;Extended;Street;City;State;Zip;Country
+      // We'll split address into parts by comma for best compatibility
+      const adrParts = address.split(',').map(part => part.trim());
+      // Ensure we have 7 parts
+      while (adrParts.length < 7) adrParts.push('');
+      // Compose the VCARD
       return [
         'BEGIN:VCARD',
         'VERSION:3.0',
         `FN:${name}`,
-        `TEL;TYPE=CELL:${phone}`,
+        `N:${name};;;;`, // Surname/Given/Middle/Prefix/Suffix, using full name
         `ORG:${company}`,
         `TITLE:${title}`,
-        `ADR;TYPE=WORK:;;${adr}`,
+        `TEL;TYPE=CELL:${phone}`,
+        `ADR;TYPE=WORK:;${adrParts[0]};${adrParts[1]};${adrParts[2]};${adrParts[3]};${adrParts[4]};${adrParts[5]}`,
         'END:VCARD'
       ].join('\n');
     }
@@ -127,7 +133,7 @@
         data: vcard,
         image: undefined,
         dotsOptions: {
-          color: "#2563eb",
+          color: "#000", // black
           type: "rounded"
         },
         backgroundOptions: {
@@ -136,7 +142,7 @@
         imageOptions: {
           crossOrigin: "anonymous",
           margin: 4,
-          imageSize: 0.25 // 25% of QR size
+          imageSize: 0.37 // 37% of QR size (larger logo)
         }
       });
 
