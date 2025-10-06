@@ -6,6 +6,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
+
+   /* 2D SPINNING ANIMATION */
+@keyframes spin {
+  from { transform: rotate(0deg) }
+  to { transform: rotate(360deg) }
+}
+.spin { animation: spin 3s linear infinite; }
+
+/* 3D SPINNING ANIMATION */
+@keyframes spin3D {
+  from { transform: rotateY(0deg) }
+  to { transform: rotateY(360deg) }
+}
+.spin3D { animation: spin3D 3s ease-in-out infinite; } 
+
+
+    
     body {
       font-family: 'Inter', Arial, sans-serif;
       background: #f6f7fb;
@@ -54,7 +71,7 @@
 <body>
   <div class="container">
     <h1>Evan's VCARD QR Code Generator</h1>
-    <center><img src="https://evankrocker.github.io/qrcode/evan.jpg" style="length: 300px; height: 300px;"></center>
+    <center><img src="https://evankrocker.github.io/qrcode/evan.jpg" class="spin"  style="length: 300px; height: 300px;"></center>
     <HR>
     <BR><BR>
     <form id="vcard-form" autocomplete="off">
