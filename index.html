@@ -56,6 +56,9 @@
       <label for="name">Full Name</label>
       <input type="text" id="name" required placeholder="e.g. John Doe">
 
+      <label for="email">Email</label>
+      <input type="email" id="email" required placeholder="e.g. john@company.com">
+
       <label for="phone">Phone Number</label>
       <input type="tel" id="phone" required placeholder="e.g. +1234567890">
 
@@ -87,22 +90,21 @@
     const downloadBtn = document.getElementById('download-btn');
     let qrCode;
 
-    // Helper: Build VCARD string in v3.0 format (corrected)
-    function buildVCard(name, phone, company, title, address) {
+    // Helper: Build VCARD string in v3.0 format (with EMAIL)
+    function buildVCard(name, email, phone, company, title, address) {
       // VCARD ADR fields: PO Box;Extended;Street;City;State;Zip;Country
       // We'll split address into parts by comma for best compatibility
       const adrParts = address.split(',').map(part => part.trim());
-      // Ensure we have 7 parts
       while (adrParts.length < 7) adrParts.push('');
-      // Compose the VCARD
       return [
         'BEGIN:VCARD',
         'VERSION:3.0',
         `FN:${name}`,
-        `N:${name};;;;`, // Surname/Given/Middle/Prefix/Suffix, using full name
+        `N:${name};;;;`,
         `ORG:${company}`,
         `TITLE:${title}`,
         `TEL;TYPE=CELL:${phone}`,
+        `EMAIL;TYPE=INTERNET:${email}`,
         `ADR;TYPE=WORK:;${adrParts[0]};${adrParts[1]};${adrParts[2]};${adrParts[3]};${adrParts[4]};${adrParts[5]}`,
         'END:VCARD'
       ].join('\n');
@@ -112,6 +114,7 @@
       e.preventDefault();
       // Gather form data
       const name = form.name.value.trim();
+      const email = form.email.value.trim();
       const phone = form.phone.value.trim();
       const company = form.company.value.trim();
       const title = form.title.value.trim();
@@ -119,7 +122,7 @@
       const logoFile = form.logo.files[0];
 
       // Prepare VCARD data
-      const vcard = buildVCard(name, phone, company, title, address);
+      const vcard = buildVCard(name, email, phone, company, title, address);
 
       // Remove previous QR code
       qrContainer.innerHTML = '';
