@@ -106,15 +106,18 @@
     <center><img src="https://evankrocker.github.io/qrcode/evan.jpg" class="spin"  style="length: 275px; height: 275px;"></center>
     <HR>
     <BR><BR>
-      <form id="vcard-form" autocomplete="off">
+    <form id="vcard-form" autocomplete="off">
       <label for="name">Full Name</label>
       <input type="text" id="name" required placeholder="e.g. John Doe">
 
       <label for="email">Email</label>
       <input type="email" id="email" required placeholder="e.g. john@company.com">
 
-      <label for="phone">Phone Number</label>
-      <input type="tel" id="phone" required placeholder="e.g. +1234567890">
+      <label for="mobile">Mobile Phone Number</label>
+      <input type="tel" id="mobile" required placeholder="e.g. +1234567890">
+
+      <label for="office">Office Phone Number</label>
+      <input type="tel" id="office" required placeholder="e.g. +1987654321">
 
       <label for="company">Company</label>
       <input type="text" id="company" required placeholder="e.g. Acme Corporation">
@@ -149,8 +152,8 @@
     const downloadBtn = document.getElementById('download-btn');
     let qrCode;
 
-    // Helper: Build VCARD string in v3.0 format (with address fields)
-    function buildVCard(name, email, phone, company, title, street, city, state, zip) {
+    // Helper: Build VCARD string in v3.0 format (with two phone numbers)
+    function buildVCard(name, email, mobile, office, company, title, street, city, state, zip) {
       // VCARD ADR fields: PO Box;Extended;Street;City;State;Zip;Country
       // We'll use empty PO Box, Extended, and Country fields
       return [
@@ -160,7 +163,8 @@
         `N:${name};;;;`,
         `ORG:${company}`,
         `TITLE:${title}`,
-        `TEL;TYPE=CELL:${phone}`,
+        `TEL;TYPE=CELL:${mobile}`,
+        `TEL;TYPE=WORK,VOICE:${office}`,
         `EMAIL;TYPE=INTERNET:${email}`,
         `ADR;TYPE=WORK:;;${street};${city};${state};${zip};`,
         'END:VCARD'
@@ -172,7 +176,8 @@
       // Gather form data
       const name = form.name.value.trim();
       const email = form.email.value.trim();
-      const phone = form.phone.value.trim();
+      const mobile = form.mobile.value.trim();
+      const office = form.office.value.trim();
       const company = form.company.value.trim();
       const title = form.title.value.trim();
       const street = form.street.value.trim();
@@ -182,7 +187,7 @@
       const logoFile = form.logo.files[0];
 
       // Prepare VCARD data
-      const vcard = buildVCard(name, email, phone, company, title, street, city, state, zip);
+      const vcard = buildVCard(name, email, mobile, office, company, title, street, city, state, zip);
 
       // Remove previous QR code
       qrContainer.innerHTML = '';
